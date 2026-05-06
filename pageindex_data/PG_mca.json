@@ -1,0 +1,40 @@
+{
+  "metadata": {
+    "id": "pi-cmouckpv70bh101qr6tl1nv1w",
+    "name": "PG_mca.pdf",
+    "description": "This document describes a 2-year Master of Computer Applications (MCA) program designed to prepare students for careers in the software industry and academia through a blend of coursework and industry projects.",
+    "status": "completed",
+    "createdAt": "2026-05-06T17:44:53.518000",
+    "pageNum": 1,
+    "folderId": null
+  },
+  "tree": {
+    "doc_id": "pi-cmouckpv70bh101qr6tl1nv1w",
+    "status": "completed",
+    "retrieval_ready": true,
+    "result": [
+      {
+        "title": "MCA Programme",
+        "node_id": "0000",
+        "page_index": 1,
+        "summary": "# MCA Programme\n\nComputer Science &amp; Engineering Department offers a 2-Year MCA programme. This programme is designed to provide an opportunity to the students who hold minimum 3 years Bachelor Degree in any discipline from a recognized University with at least 60% marks (55% for SC/ST) in aggregate with Mathematics at 10+2 or graduation level. The core objective of this programme is to prepare the students for productive careers in software industry and academia by providing an outstanding environment of teaching and research in both core and emerging areas of the discipline. The students study courses for three semesters at the Institute and do a Software Development Project in some reputed industry in the fourth semester. The programme equips students with the skill and relevant competence to meet the manpower requirement of the fast growing software industry as well as institutions of higher learning.\n",
+        "text": "# MCA Programme\n\nComputer Science &amp; Engineering Department offers a 2-Year MCA programme. This programme is designed to provide an opportunity to the students who hold minimum 3 years Bachelor Degree in any discipline from a recognized University with at least 60% marks (55% for SC/ST) in aggregate with Mathematics at 10+2 or graduation level. The core objective of this programme is to prepare the students for productive careers in software industry and academia by providing an outstanding environment of teaching and research in both core and emerging areas of the discipline. The students study courses for three semesters at the Institute and do a Software Development Project in some reputed industry in the fourth semester. The programme equips students with the skill and relevant competence to meet the manpower requirement of the fast growing software industry as well as institutions of higher learning.\n"
+      }
+    ],
+    "metadata": {}
+  },
+  "pages": {
+    "doc_id": "pi-cmouckpv70bh101qr6tl1nv1w",
+    "status": "completed",
+    "retrieval_ready": true,
+    "result": [
+      {
+        "images": [],
+        "markdown": "# MCA Programme\n\nComputer Science &amp; Engineering Department offers a 2-Year MCA programme. This programme is designed to provide an opportunity to the students who hold minimum 3 years Bachelor Degree in any discipline from a recognized University with at least 60% marks (55% for SC/ST) in aggregate with Mathematics at 10+2 or graduation level. The core objective of this programme is to prepare the students for productive careers in software industry and academia by providing an outstanding environment of teaching and research in both core and emerging areas of the discipline. The students study courses for three semesters at the Institute and do a Software Development Project in some reputed industry in the fourth semester. The programme equips students with the skill and relevant competence to meet the manpower requirement of the fast growing software industry as well as institutions of higher learning.",
+        "page_index": 1,
+        "extended_node_candidates": []
+      }
+    ],
+    "metadata": {}
+  }
+}
