@@ -1,0 +1,35 @@
+# Tiet Chat Bot Dependencies
+
+# Core agent framework
+langgraph
+langchain-core
+langchain-huggingface
+
+# LLM / HuggingFace
+huggingface-hub
+
+# PageIndex local dependencies (replaces cloud `pageindex` package)
+litellm>=1.83.0
+pymupdf>=1.26.0
+PyPDF2>=3.0.1
+pyyaml>=6.0.2
+
+# Environment variables
+python-dotenv>=1.0.1
+
+# Data validation
+pydantic
+
+# Frontend
+streamlit
+
+# API backend
+fastapi
+uvicorn[standard]
+python-multipart
+
+litellm>=1.83.0
+pymupdf>=1.26.0
+PyPDF2>=3.0.1
+python-dotenv>=1.0.1
+pyyaml>=6.0.2
