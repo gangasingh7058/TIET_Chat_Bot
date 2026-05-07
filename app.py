@@ -1,12 +1,13 @@
 import streamlit as st
 from Agent.graph import Agent
 import uuid
+import re
 
 # ──────────────────────────────────────────────────
 #  Page config
 # ──────────────────────────────────────────────────
 st.set_page_config(
-    page_title="TietBot — College Assistant",
+    page_title="Scout — College Assistant",
     page_icon="🎓",
     layout="centered",
     initial_sidebar_state="expanded",
@@ -205,14 +206,55 @@ section[data-testid="stSidebar"] .stMarkdown h3 {
     font-weight: 600;
     font-family: 'JetBrains Mono', monospace;
 }
+
+/* ── Option pill buttons ── */
+div[data-testid="stHorizontalBlock"] .option-pill-container button {
+    border-radius: 24px !important;
+}
+
+div.option-pills-wrapper {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+    margin-bottom: 4px;
+}
 </style>
 """, unsafe_allow_html=True)
+
+
+# ──────────────────────────────────────────────────
+#  Helpers: parse [OPTIONS] blocks
+# ──────────────────────────────────────────────────
+OPTIONS_PATTERN = re.compile(r"\[OPTIONS\]\s*\n(.*?)\n\s*\[/OPTIONS\]", re.DOTALL)
+
+
+def parse_options(text: str):
+    """
+    Extract option lists from [OPTIONS]...[/OPTIONS] blocks in agent output.
+    Returns (clean_text, list_of_options) where clean_text has the blocks removed.
+    """
+    match = OPTIONS_PATTERN.search(text)
+    if not match:
+        return text, []
+
+    options_raw = match.group(1).strip()
+    options = [opt.strip("- •").strip() for opt in options_raw.splitlines() if opt.strip()]
+
+    # Remove the [OPTIONS] block from the display text
+    clean_text = text[: match.start()].rstrip()
+    trailing = text[match.end() :].strip()
+    if trailing:
+        clean_text += "\n\n" + trailing
+
+    return clean_text, options
+
 
 # ──────────────────────────────────────────────────
 #  Session state initialisation
 # ──────────────────────────────────────────────────
 if "agent" not in st.session_state:
-    st.session_state.agent = Agent(name="TietBot")
+    st.session_state.agent = Agent(name="Scout")
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
@@ -224,7 +266,7 @@ if "thread_id" not in st.session_state:
 #  Sidebar
 # ──────────────────────────────────────────────────
 with st.sidebar:
-    st.markdown("## 🎓 TietBot")
+    st.markdown("## 🎓 Scout")
     st.markdown('<div class="glow-divider"></div>', unsafe_allow_html=True)
 
     st.markdown(
@@ -236,7 +278,7 @@ with st.sidebar:
     Your AI assistant for **Thapar Institute of Engineering & Technology**.
 
     Ask me about:
-    - 📋 **Admissions** — process, eligibility, cutoffs
+    - 📋 **Admissions** — UG, PG, PhD, Diploma
     - 💰 **Fees** — tuition, semester, hostel charges
     - 🏠 **Hostel** — rooms, mess, rules
     - 🎓 **Scholarships** — merit, financial aid
@@ -278,7 +320,7 @@ with st.sidebar:
 if not st.session_state.messages:
     st.markdown("""
     <div class="welcome-card">
-        <h2>👋 Welcome to TietBot</h2>
+        <h2>👋 Welcome to Scout</h2>
         <p>Your intelligent assistant for all TIET queries.<br>
         Type a question below or pick one from the sidebar to get started.</p>
     </div>
@@ -287,7 +329,7 @@ if not st.session_state.messages:
 # ──────────────────────────────────────────────────
 #  Render chat history
 # ──────────────────────────────────────────────────
-for msg in st.session_state.messages:
+for idx, msg in enumerate(st.session_state.messages):
     avatar = "🎓" if msg["role"] == "assistant" else "👤"
     with st.chat_message(msg["role"], avatar=avatar):
         # Show tool activity if present
@@ -301,15 +343,34 @@ for msg in st.session_state.messages:
                         f'</div>',
                         unsafe_allow_html=True,
                     )
-        if msg["content"]:
-            st.markdown(msg["content"])
+        # Display message text (without [OPTIONS] block)
+        display_text = msg.get("display_text", msg["content"])
+        if display_text:
+            st.markdown(display_text)
+
+        # Render option buttons if this is the LAST assistant message with options
+        options = msg.get("options", [])
+        is_last_assistant = (
+            msg["role"] == "assistant"
+            and idx == len(st.session_state.messages) - 1
+        )
+        if options and is_last_assistant:
+            cols = st.columns(min(len(options), 3))
+            for i, opt in enumerate(options):
+                col = cols[i % min(len(options), 3)]
+                if col.button(
+                    f"👉 {opt}",
+                    key=f"opt_{idx}_{i}",
+                    use_container_width=True,
+                ):
+                    st.session_state.pending_question = opt
 
 # ──────────────────────────────────────────────────
 #  Handle input (typed or sidebar quick-question)
 # ──────────────────────────────────────────────────
 user_input = st.chat_input("Ask me anything about TIET...")
 
-# Check if a sidebar button was pressed
+# Check if a sidebar button or option pill was pressed
 if "pending_question" in st.session_state:
     user_input = st.session_state.pending_question
     del st.session_state.pending_question
@@ -355,11 +416,29 @@ if user_input:
                             unsafe_allow_html=True,
                         )
 
-            st.markdown(final_content)
+            # Parse options from agent response
+            display_text, options = parse_options(final_content)
 
-    # Save to history
+            # Show the text part
+            st.markdown(display_text)
+
+            # Show option pills as buttons
+            if options:
+                cols = st.columns(min(len(options), 3))
+                for i, opt in enumerate(options):
+                    col = cols[i % min(len(options), 3)]
+                    if col.button(
+                        f"👉 {opt}",
+                        key=f"new_opt_{i}",
+                        use_container_width=True,
+                    ):
+                        st.session_state.pending_question = opt
+
+    # Save to history (store both raw content and parsed display)
     st.session_state.messages.append({
         "role": "assistant",
         "content": final_content,
+        "display_text": display_text,
+        "options": options,
         "tool_calls": tool_calls_log,
     })
