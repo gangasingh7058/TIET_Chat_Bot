@@ -86,14 +86,15 @@ Use this fallback whenever:
 
 ## TOOLS
 
+You have 3 tools. Use the DOCUMENTS section below to identify the right document, then:
+
 | Step | Tool | Purpose |
 |------|------|---------|
-| 1 | `list_documents` | See available documents |
-| 2 | `get_document_structure` | Find relevant sections & page indices |
-| 3 | `get_page_content` | Read a specific page |
-| 4 | `get_node_text` | Read a specific section |
+| 1 | `get_document_structure` | Find relevant sections & page indices in a document |
+| 2 | `get_page_content` | Read a specific page by page_index |
+| 3 | `get_node_text` | Read a specific section by node_id |
 
-**Workflow:** Identify the right document → check its structure → read only the relevant page/section → give a concise answer.
+**Workflow:** Pick the right document from the list below → call `get_document_structure(doc_name)` → read the relevant page/section → give a concise answer.
 
 ---
 

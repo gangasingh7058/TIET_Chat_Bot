@@ -7,7 +7,7 @@ from langgraph.graph import StateGraph, END, START
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.prebuilt import ToolNode
 from langgraph.graph.message import add_messages
-from langchain_huggingface import ChatHuggingFace, HuggingFaceEndpoint
+from langchain_openai import ChatOpenAI
 from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
 from .tools import all_tools
 from .prompts.prompts import college_assistant_system_prompt
@@ -21,7 +21,7 @@ class Agent():
 
     Attributes:
         name (str): Name of the agent
-        model (str): HuggingFace model repo id
+        model (str): OpenRouter model identifier
         system_prompt (str): System prompt for the agent
         temperature (float): Sampling temperature
     """
@@ -29,7 +29,7 @@ class Agent():
     def __init__(
         self,
         name: str,
-        model: str = "Qwen/Qwen2.5-72B-Instruct",
+        model: str = "openai/gpt-4o-mini",
         system_prompt: str = college_assistant_system_prompt,
         temperature: float = 0.5,
     ):
@@ -39,14 +39,13 @@ class Agent():
         self.system_prompt = system_prompt
         self.temperature = temperature
 
-        endpoint = HuggingFaceEndpoint(
-            repo_id=self.model,
-            task="text-generation",
-            huggingfacehub_api_token=os.getenv("HUGGING_FACE_API_TOKEN"),
+        self.llm = ChatOpenAI(
+            model=self.model,
+            openai_api_key=os.getenv("OPENROUTER_API_KEY"),
+            openai_api_base="https://openrouter.ai/api/v1",
             temperature=self.temperature,
-        )
+        ).bind_tools(self.tools)
 
-        self.llm = ChatHuggingFace(llm=endpoint).bind_tools(self.tools)
         self.runnable = self.build_graph()
 
     def build_graph(self):

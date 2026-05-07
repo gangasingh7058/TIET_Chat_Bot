@@ -141,7 +141,6 @@ def get_node_text(doc_name: str, node_id: str) -> str:
 
 # All tools as a flat list for the agent
 all_tools = [
-    list_documents,
     get_document_structure,
     get_page_content,
     get_node_text,
