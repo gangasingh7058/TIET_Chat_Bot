@@ -1,6 +1,17 @@
 import os
 from dotenv import load_dotenv
 load_dotenv(override=True)
+
+def get_secret(key: str) -> str:
+    """Get a secret from env vars (local) or st.secrets (Streamlit Cloud)."""
+    val = os.getenv(key)
+    if val:
+        return val
+    try:
+        import streamlit as st
+        return st.secrets.get(key, "")
+    except Exception:
+        return ""
 from pydantic import BaseModel
 from typing import List, Annotated
 from langgraph.graph import StateGraph, END, START
@@ -41,7 +52,7 @@ class Agent():
 
         self.llm = ChatOpenAI(
             model=self.model,
-            openai_api_key=os.getenv("OPENROUTER_API_KEY"),
+            openai_api_key=get_secret("OPENROUTER_API_KEY"),
             openai_api_base="https://openrouter.ai/api/v1",
             temperature=self.temperature,
             streaming=True,
