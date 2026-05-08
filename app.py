@@ -5,7 +5,7 @@ import uuid
 import re
 
 # ──────────────────────────────────────────────────
-#  Page config
+# Page config
 # ──────────────────────────────────────────────────
 st.set_page_config(
     page_title="Scout — College Assistant",
@@ -15,399 +15,251 @@ st.set_page_config(
 )
 
 # ──────────────────────────────────────────────────
-#  Custom CSS
+# CSS
 # ──────────────────────────────────────────────────
 st.markdown("""
 <style>
-/* ── Import Google Font ── */
+
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
-* { font-family: 'Inter', sans-serif; }
-
-/* ── Animated gradient background orbs ── */
-.stApp {
-    background: linear-gradient(180deg, #ffffff 0%, #fffafa 100%);
-}
-.stApp::before {
-    content: '';
-    position: fixed;
-    top: -140px;
-    left: -140px;
-    width: 520px;
-    height: 520px;
-    background: radial-gradient(circle, rgba(239,68,68,0.14) 0%, transparent 68%);
-    border-radius: 50%;
-    animation: float1 18s ease-in-out infinite;
-    z-index: 0;
-    pointer-events: none;
-}
-.stApp::after {
-    content: '';
-    position: fixed;
-    bottom: -120px;
-    right: -120px;
-    width: 620px;
-    height: 620px;
-    background: radial-gradient(circle, rgba(239,68,68,0.10) 0%, transparent 70%);
-    border-radius: 50%;
-    animation: float2 22s ease-in-out infinite;
-    z-index: 0;
-    pointer-events: none;
+*{
+    font-family:'Inter',sans-serif;
 }
 
-@keyframes float1 {
-    0%, 100% { transform: translate(0, 0) scale(1); }
-    33% { transform: translate(60px, 80px) scale(1.1); }
-    66% { transform: translate(-40px, 40px) scale(0.95); }
-}
-@keyframes float2 {
-    0%, 100% { transform: translate(0, 0) scale(1); }
-    33% { transform: translate(-70px, -50px) scale(1.05); }
-    66% { transform: translate(50px, -80px) scale(0.9); }
+.stApp{
+    background:linear-gradient(180deg,#ffffff 0%,#fff7f7 100%);
 }
 
-/* ── Hide default Streamlit branding ── */
-#MainMenu { visibility: hidden; }
-footer { visibility: hidden; }
-header { visibility: hidden; }
+#MainMenu {visibility:hidden;}
+footer {visibility:hidden;}
+header {visibility:hidden;}
 
-/* ── Chat message styling ── */
-.stChatMessage {
-    border-radius: 16px !important;
-    padding: 12px 16px !important;
-    margin-bottom: 8px !important;
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(255,255,255,0.04) !important;
-    animation: fadeSlideIn 0.35s ease-out;
+/* Chat styling */
+
+.stChatMessage{
+    border-radius:18px !important;
+    padding:12px 16px !important;
+    margin-bottom:10px !important;
+    animation:fadeIn 0.3s ease;
 }
 
-@keyframes fadeSlideIn {
-    from { opacity: 0; transform: translateY(12px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-/* User messages */
-[data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-user"]) {
-    background: rgba(254,226,226,0.95) !important;
-    border-left: 3px solid #7f1d1d !important;
-    color: #1f1f1f !important;
-}
-
-/* Assistant messages */
-[data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-assistant"]) {
-    background: rgba(255,247,237,0.95) !important;
-    border-left: 3px solid #991b1b !important;
-    color: #1f1f1f !important;
-}
-
-/* ── Chat input ── */
-.stChatInput > div {
-    border-radius: 16px !important;
-    border: 1px solid rgba(112,24,24,0.35) !important;
-    background: rgba(112,24,24,0.95) !important;
-    color: #f8fafc !important;
-    backdrop-filter: blur(8px);
-    transition: border-color 0.3s ease, box-shadow 0.3s ease;
-}
-.stChatInput > div:focus-within {
-    border-color: #7f1d1d !important;
-    box-shadow: 0 0 0 2px rgba(112,24,24,0.18) !important;
-}
-
-/* ── Markdown text on white pages ── */
-.stMarkdown,
-.stMarkdown h1,
-.stMarkdown h2,
-.stMarkdown h3,
-.stMarkdown h4,
-.stMarkdown h5,
-.stMarkdown p,
-.stMarkdown li,
-.stMarkdown span {
-    color: #1f1f1f !important;
-}
-
-/* ── Sidebar (Compact Production-Ready) ── */
-section[data-testid="stSidebar"] {
-    background: linear-gradient(135deg, #7f1d1d 0%, #991b1b 60%, #b91c1c 100%) !important;
-    border-right: 1px solid rgba(112,24,24,0.5);
-    width: 280px !important;
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-}
-
-/* Sidebar title styling */
-section[data-testid="stSidebar"] .stMarkdown h2 {
-    color: #ffffff !important;
-    font-size: 18px !important;
-    font-weight: 700 !important;
-    margin: 0 0 8px 0 !important;
-    letter-spacing: 0.3px;
-}
-
-/* Sidebar headings */
-section[data-testid="stSidebar"] .stMarkdown h4 {
-    color: #ffffff !important;
-    font-size: 12px !important;
-    font-weight: 700 !important;
-    margin: 12px 0 8px 0 !important;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    opacity: 0.95;
-}
-
-/* Sidebar body text */
-section[data-testid="stSidebar"] .stMarkdown p,
-section[data-testid="stSidebar"] .stMarkdown li {
-    color: #fecaca !important;
-    font-size: 12px !important;
-    line-height: 1.5 !important;
-    margin: 4px 0 !important;
-}
-
-/* Sidebar bold text */
-section[data-testid="stSidebar"] .stMarkdown strong,
-section[data-testid="stSidebar"] .stMarkdown b {
-    color: #fca5a5 !important;
-    font-weight: 600;
-}
-
-/* Sidebar list items compacting */
-section[data-testid="stSidebar"] .stMarkdown li {
-    margin-left: 16px;
-    margin-bottom: 2px;
-}
-
-/* Sidebar buttons - compact style */
-section[data-testid="stSidebar"] button {
-    font-size: 12px !important;
-    padding: 8px 12px !important;
-    margin: 4px 0 !important;
-    border-radius: 12px !important;
-    font-weight: 500 !important;
-    transition: all 0.2s ease;
-}
-
-section[data-testid="stSidebar"] button:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-}
-
-/* Sidebar container spacing optimization */
-section[data-testid="stSidebar"] > div:first-child {
-    padding: 20px 16px !important;
-}
-
-/* Reduce all margins in sidebar */
-section[data-testid="stSidebar"] .stMarkdown {
-    margin: 0 !important;
-}
-
-/* Responsive: Tablet and below */
-@media (max-width: 1024px) {
-    section[data-testid="stSidebar"] {
-        width: 240px !important;
+@keyframes fadeIn{
+    from{
+        opacity:0;
+        transform:translateY(10px);
     }
-    
-    section[data-testid="stSidebar"] .stMarkdown h2 {
-        font-size: 16px !important;
-    }
-    
-    section[data-testid="stSidebar"] .stMarkdown p,
-    section[data-testid="stSidebar"] .stMarkdown li,
-    section[data-testid="stSidebar"] button {
-        font-size: 11px !important;
+    to{
+        opacity:1;
+        transform:translateY(0px);
     }
 }
 
-/* Main content area optimization */
-.stMainBlockContainer {
-    max-width: 900px;
-    margin: 0 auto;
+/* User */
+
+[data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-user"]){
+    background:#fee2e2 !important;
+    border-left:4px solid #991b1b !important;
 }
 
-/* Responsive: Tablet and below */
-@media (max-width: 640px) {
-    section[data-testid="stSidebar"] {
-        width: 220px !important;
-        padding: 12px 8px !important;
+/* Assistant */
+
+[data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-assistant"]){
+    background:#fff7ed !important;
+    border-left:4px solid #b91c1c !important;
+}
+
+/* Input */
+
+.stChatInput > div{
+    border-radius:18px !important;
+    border:1px solid rgba(127,29,29,0.3) !important;
+    background:white !important;
+}
+
+/* Sidebar */
+
+section[data-testid="stSidebar"]{
+    background:linear-gradient(
+        135deg,
+        #7f1d1d 0%,
+        #991b1b 50%,
+        #b91c1c 100%
+    ) !important;
+}
+
+section[data-testid="stSidebar"] *{
+    color:white !important;
+}
+
+.glow-divider{
+    height:1px;
+    background:rgba(255,255,255,0.2);
+    margin:14px 0;
+    border:none;
+}
+
+.status-badge{
+    background:rgba(255,255,255,0.12);
+    padding:6px 12px;
+    border-radius:18px;
+    display:inline-block;
+    font-size:12px;
+}
+
+/* Tool activity */
+
+.tool-activity{
+    background:#fee2e2;
+    border-radius:12px;
+    padding:10px;
+    margin-bottom:8px;
+}
+
+/* Welcome */
+
+.welcome-box{
+    text-align:center;
+    padding:30px;
+    background:white;
+    border-radius:24px;
+    box-shadow:0 10px 40px rgba(0,0,0,0.06);
+    margin-bottom:20px;
+}
+
+.welcome-box h1{
+    color:#991b1b;
+}
+
+/* Thinking Animation */
+
+.thinking-wrapper{
+    width:100%;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    margin-top:10px;
+    margin-bottom:10px;
+}
+
+.runner-area{
+    width:100%;
+    height:140px;
+    position:relative;
+    overflow:hidden;
+}
+
+.runner{
+    position:absolute;
+    top:20px;
+    right:-350px;
+    animation:runAcross 7s linear infinite;
+    display:flex;
+    align-items:center;
+    gap:16px;
+}
+
+.runner-char{
+    font-size:82px;
+}
+
+.thought-cloud{
+    position:relative;
+    background:white;
+    color:#991b1b;
+    padding:14px 22px;
+    border-radius:30px;
+    font-size:15px;
+    font-weight:700;
+    white-space:nowrap;
+    box-shadow:0 10px 30px rgba(0,0,0,0.12);
+}
+
+.thought-cloud::before{
+    content:'';
+    position:absolute;
+    width:16px;
+    height:16px;
+    background:white;
+    border-radius:50%;
+    left:-10px;
+    bottom:10px;
+}
+
+.thought-cloud::after{
+    content:'';
+    position:absolute;
+    width:10px;
+    height:10px;
+    background:white;
+    border-radius:50%;
+    left:-18px;
+    bottom:2px;
+}
+
+.thinking-facts{
+    margin-top:10px;
+    font-size:18px;
+    font-weight:700;
+    color:#991b1b;
+    animation:pulseText 2s infinite;
+}
+
+@keyframes runAcross{
+    0%{
+        right:-350px;
     }
-    
-    section[data-testid="stSidebar"] > div:first-child {
-        padding: 12px 8px !important;
-    }
-    
-    section[data-testid="stSidebar"] .stMarkdown h2 {
-        font-size: 14px !important;
-    }
-    
-    section[data-testid="stSidebar"] .stMarkdown h4 {
-        font-size: 11px !important;
-        margin-top: 8px !important;
-    }
-    
-    section[data-testid="stSidebar"] .stMarkdown p,
-    section[data-testid="stSidebar"] .stMarkdown li {
-        font-size: 10px !important;
-        line-height: 1.4 !important;
-    }
-    
-    section[data-testid="stSidebar"] button {
-        font-size: 10px !important;
-        padding: 6px 10px !important;
-        margin: 3px 0 !important;
-    }
-    
-    .stMainBlockContainer {
-        max-width: 100%;
+    100%{
+        right:110%;
     }
 }
 
-/* ── Quick-question pills (Compact Production) ── */
-.quick-q {
-    display: inline-block;
-    padding: 6px 12px;
-    margin: 3px;
-    border-radius: 18px;
-    font-size: 11px;
-    font-weight: 500;
-    color: #7f1d1d;
-    background: rgba(254,226,226,0.85);
-    border: 1px solid rgba(112,24,24,0.2);
-    cursor: pointer;
-    transition: all 0.2s ease;
-    backdrop-filter: blur(4px);
-}
-.quick-q:hover {
-    background: rgba(254,226,226,0.95);
-    border-color: rgba(112,24,24,0.4);
-    transform: translateY(-1px);
-    box-shadow: 0 3px 8px rgba(0,0,0,0.1);
-}
-
-/* ── Status badge (Compact Production) ── */
-.status-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    padding: 5px 10px;
-    border-radius: 18px;
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.3px;
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-}
-.status-online {
-    background: rgba(254,226,226,0.9);
-    color: #7f1d1d;
-    border: 1px solid rgba(220,38,38,0.3);
-    box-shadow: 0 4px 12px rgba(220,38,38,0.15);
-}
-
-/* ── Divider (Compact) ── */
-.glow-divider {
-    height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(254,226,226,0.35), transparent);
-    border: none;
-    margin: 10px 0;
-}
-
-/* ── Welcome card ── */
-.welcome-card {
-    background: #ffffff;
-    border: 1px solid rgba(220,38,38,0.25);
-    box-shadow: 0 24px 80px rgba(220,38,38,0.08);
-    border-radius: 24px;
-    padding: 32px 32px;
-    text-align: center;
-    margin-bottom: 24px;
-}
-.welcome-card h2 {
-    margin: 0 0 12px 0;
-    font-size: 32px;
-    color: #b91c1c;
-}
-.welcome-card p {
-    color: #1f2937;
-    font-size: 15px;
-    margin: 0 auto;
-    max-width: 760px;
-}
-.welcome-card strong,
-.welcome-card b {
-    color: #991b1b;
-}
-
-/* ── Tool activity expander ── */
-.tool-activity {
-    background: rgba(254,226,226,0.85);
-    border: 1px solid rgba(220,38,38,0.18);
-    border-radius: 12px;
-    padding: 10px 14px;
-    margin: 8px 0;
-    font-size: 13px;
-    color: #7f1d1d;
-}
-.tool-name {
-    color: #dc2626;
-    font-weight: 600;
-    font-family: 'JetBrains Mono', monospace;
-}
-
-/* ── Option pill buttons ── */
-div[data-testid="stHorizontalBlock"] .option-pill-container button {
-    border-radius: 24px !important;
-}
-
-/* ── Option pill buttons ── */
-div[data-testid="stHorizontalBlock"] .option-pill-container button {
-    border-radius: 24px !important;
-}
-
-div.option-pills-wrapper {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-top: 12px;
-    margin-bottom: 4px;
+@keyframes pulseText{
+    0%{opacity:0.3;}
+    50%{opacity:1;}
+    100%{opacity:0.3;}
 }
 
 </style>
 """, unsafe_allow_html=True)
 
-
 # ──────────────────────────────────────────────────
-#  Helpers: parse [OPTIONS] blocks
+# Helpers
 # ──────────────────────────────────────────────────
-OPTIONS_PATTERN = re.compile(r"\[OPTIONS\]\s*\n(.*?)\n\s*\[/OPTIONS\]", re.DOTALL)
 
+OPTIONS_PATTERN = re.compile(
+    r"\[OPTIONS\]\s*\n(.*?)\n\s*\[/OPTIONS\]",
+    re.DOTALL
+)
 
 def parse_options(text: str):
-    """
-    Extract option lists from [OPTIONS]...[/OPTIONS] blocks in agent output.
-    Returns (clean_text, list_of_options) where clean_text has the blocks removed.
-    """
+
     match = OPTIONS_PATTERN.search(text)
+
     if not match:
         return text, []
 
     options_raw = match.group(1).strip()
-    options = [opt.strip("- •").strip() for opt in options_raw.splitlines() if opt.strip()]
 
-    # Remove the [OPTIONS] block from the display text
-    clean_text = text[: match.start()].rstrip()
-    trailing = text[match.end() :].strip()
+    options = [
+        opt.strip("- •").strip()
+        for opt in options_raw.splitlines()
+        if opt.strip()
+    ]
+
+    clean_text = text[:match.start()].rstrip()
+
+    trailing = text[match.end():].strip()
+
     if trailing:
         clean_text += "\n\n" + trailing
 
     return clean_text, options
 
+# ──────────────────────────────────────────────────
+# Session state
+# ──────────────────────────────────────────────────
 
-# ──────────────────────────────────────────────────
-#  Session state initialisation
-# ──────────────────────────────────────────────────
 if "agent" not in st.session_state:
     st.session_state.agent = Agent(name="Scout")
 
@@ -418,206 +270,273 @@ if "thread_id" not in st.session_state:
     st.session_state.thread_id = str(uuid.uuid4())
 
 # ──────────────────────────────────────────────────
-#  Sidebar
+# Sidebar
 # ──────────────────────────────────────────────────
+
 with st.sidebar:
+
     st.markdown("## 🎓 Scout")
-    st.markdown('<div class="glow-divider"></div>', unsafe_allow_html=True)
 
     st.markdown(
-        '<span class="status-badge status-online">● Online</span>',
-        unsafe_allow_html=True,
+        '<div class="glow-divider"></div>',
+        unsafe_allow_html=True
+    )
+
+    st.markdown(
+        '<span class="status-badge">● Online</span>',
+        unsafe_allow_html=True
     )
 
     st.markdown("""
-    Your AI assistant for **Thapar Institute**.
+    ### TIET Assistant
 
-    **Topics:**
-    - 📋 Admissions (UG, PG, PhD, Diploma)
-    - 💰 Fees & Charges
-    - 🏠 Hostel Facilities
+    - 📋 Admissions
+    - 💰 Fees
+    - 🏠 Hostel
     - 🎓 Scholarships
     - 🌍 International Programs
-    - 🏫 College Information
     """)
 
-    st.markdown('<div class="glow-divider"></div>', unsafe_allow_html=True)
-
-    st.markdown("#### 💡 Quick Questions")
-    quick_questions = [
-        "B.Tech fees?",
-        "Admission process?",
-        "Scholarships?",
-        "International programs?",
-        "Hostel charges?",
-    ]
-    
-    cols = st.columns(2)
-    for i, q in enumerate(quick_questions):
-        col = cols[i % 2]
-        if col.button(q, key=f"qq_{q}", use_container_width=True):
-            st.session_state.pending_question = {
-                "B.Tech fees?": "What is the B.Tech fee structure?",
-                "Admission process?": "How do I apply for admission?",
-                "Scholarships?": "What scholarships are available?",
-                "International programs?": "Tell me about international exchange programs",
-                "Hostel charges?": "What are the hostel charges?",
-            }.get(q, q)
-
-    st.markdown('<div class="glow-divider"></div>', unsafe_allow_html=True)
+    st.markdown(
+        '<div class="glow-divider"></div>',
+        unsafe_allow_html=True
+    )
 
     if st.button("🔄 New Chat", use_container_width=True):
         st.session_state.messages = []
         st.session_state.thread_id = str(uuid.uuid4())
         st.rerun()
 
-    st.markdown(
-        '<div style="position:fixed; bottom:16px; font-size:10px; color:#fecaca; opacity:0.8;">'
-        'Powered by PageIndex & LangGraph'
-        '</div>',
-        unsafe_allow_html=True,
-    )
-
 # ──────────────────────────────────────────────────
-
-# ──────────────────────────────────────────────────
-
-# Welcome card (shown when no messages)
-
+# Welcome
 # ──────────────────────────────────────────────────
 
 if not st.session_state.messages:
-    st.markdown(
-        """
-        ## 🎓 Welcome to THAPAR Institute of Engineering & Technology
 
-        ### Your AI Campus Companion is ready.
+    st.markdown("""
+    <div class="welcome-box">
 
-        **Scout AI** helps you find the best of Thapar:
-        - Admissions and application guidance
-        - Scholarship options and fee details
-        - Hostel life, mess, and campus facilities
-        - Academics, placements, and student activities
+    <h1>🎓 Welcome to THAPAR</h1>
 
-        > Start your journey with a warm Thapar welcome.
+    <p>
+    Your AI Campus Companion is ready.
+    Ask anything about admissions, hostel,
+    fees, scholarships and student life.
+    </p>
 
-        🏛️ 70 Years of Excellence • 🚀 AI-powered college support • 🌍 Built for TIET students
-        """
-    )
+    <br>
+
+    🏛️ 70 Years of Excellence • 🚀 AI Powered Support
+
+    </div>
+    """, unsafe_allow_html=True)
 
 # ──────────────────────────────────────────────────
-#  Render chat history
+# Chat history
 # ──────────────────────────────────────────────────
+
 for idx, msg in enumerate(st.session_state.messages):
+
     avatar = "🎓" if msg["role"] == "assistant" else "👤"
+
     with st.chat_message(msg["role"], avatar=avatar):
-        # Show tool activity if present
-        if msg.get("tool_calls"):
-            with st.expander("🔧 Tool activity", expanded=False):
-                for tc in msg["tool_calls"]:
-                    st.markdown(
-                        f'<div class="tool-activity">'
-                        f'Called <span class="tool-name">{tc["name"]}</span>'
-                        f'(<code>{tc["args"]}</code>)'
-                        f'</div>',
-                        unsafe_allow_html=True,
-                    )
-        # Display message text (without [OPTIONS] block)
-        display_text = msg.get("display_text", msg["content"])
-        if display_text:
-            st.markdown(display_text)
 
-        # Render option buttons if this is the LAST assistant message with options
-        options = msg.get("options", [])
-        is_last_assistant = (
-            msg["role"] == "assistant"
-            and idx == len(st.session_state.messages) - 1
+        display_text = msg.get(
+            "display_text",
+            msg["content"]
         )
-        if options and is_last_assistant:
-            cols = st.columns(min(len(options), 3))
-            for i, opt in enumerate(options):
-                col = cols[i % min(len(options), 3)]
-                if col.button(
-                    f"👉 {opt}",
-                    key=f"opt_{idx}_{i}",
-                    use_container_width=True,
-                ):
-                    st.session_state.pending_question = opt
+
+        st.markdown(display_text)
 
 # ──────────────────────────────────────────────────
-#  Handle input (typed or sidebar quick-question)
+# Input
 # ──────────────────────────────────────────────────
-user_input = st.chat_input("Ask me anything about TIET...")
 
-# Check if a sidebar button or option pill was pressed
-if "pending_question" in st.session_state:
-    user_input = st.session_state.pending_question
-    del st.session_state.pending_question
+user_input = st.chat_input(
+    "Ask me anything about TIET..."
+)
 
 if user_input:
-    # Display user message
-    st.session_state.messages.append({"role": "user", "content": user_input})
+
+    st.session_state.messages.append({
+        "role":"user",
+        "content":user_input
+    })
+
     with st.chat_message("user", avatar="👤"):
         st.markdown(user_input)
 
-    # Get agent response
     with st.chat_message("assistant", avatar="🎓"):
-        with st.spinner("Thinking..."):
-            result = st.session_state.agent.invoke(
-                user_input,
-                config={"configurable": {"thread_id": st.session_state.thread_id}},
-            )
 
-            # Extract tool calls and final response
-            tool_calls_log = []
-            final_content = ""
+        thinking_placeholder = st.empty()
 
-            for msg in result["messages"]:
-                if msg.type == "ai":
-                    if hasattr(msg, "tool_calls") and msg.tool_calls:
-                        for tc in msg.tool_calls:
-                            tool_calls_log.append({
-                                "name": tc["name"],
-                                "args": tc["args"].get("query", str(tc["args"])),
-                            })
-                    if msg.content:
-                        final_content = msg.content
+        components.html("""
+<style>
 
-            # Show tool activity
-            if tool_calls_log:
-                with st.expander("🔧 Tool activity", expanded=False):
-                    for tc in tool_calls_log:
-                        st.markdown(
-                            f'<div class="tool-activity">'
-                            f'Called <span class="tool-name">{tc["name"]}</span>'
-                            f'(<code>{tc["args"]}</code>)'
-                            f'</div>',
-                            unsafe_allow_html=True,
-                        )
+.thinking-wrapper{
+    width:100%;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    margin-top:10px;
+    margin-bottom:10px;
+}
 
-            # Parse options from agent response
-            display_text, options = parse_options(final_content)
+.runner-area{
+    width:100%;
+    height:150px;
+    position:relative;
+    overflow:hidden;
+}
 
-            # Show the text part
-            st.markdown(display_text)
+.runner{
+    position:absolute;
+    top:25px;
+    right:-350px;
+    animation:runAcross 7s linear infinite;
+    display:flex;
+    align-items:center;
+    gap:18px;
+}
 
-        # Show option pills as buttons
-        if options:
-            cols = st.columns(min(len(options), 3))
-            for i, opt in enumerate(options):
-                col = cols[i % min(len(options), 3)]
-                if col.button(
-                    f"👉 {opt}",
-                    key=f"new_opt_{i}",
-                    use_container_width=True,
-                ):
-                    st.session_state.pending_question = opt
+.runner-char{
+    font-size:90px;
+}
 
-    # Save to history
+.thought-cloud{
+    position:relative;
+    background:white;
+    color:#991b1b;
+    padding:14px 24px;
+    border-radius:30px;
+    font-size:16px;
+    font-weight:700;
+    white-space:nowrap;
+    box-shadow:0 10px 25px rgba(0,0,0,0.15);
+}
+
+.thought-cloud::before{
+    content:'';
+    position:absolute;
+    width:16px;
+    height:16px;
+    background:white;
+    border-radius:50%;
+    left:-10px;
+    bottom:10px;
+}
+
+.thought-cloud::after{
+    content:'';
+    position:absolute;
+    width:10px;
+    height:10px;
+    background:white;
+    border-radius:50%;
+    left:-18px;
+    bottom:2px;
+}
+
+.thinking-facts{
+    margin-top:10px;
+    font-size:18px;
+    font-weight:700;
+    color:#991b1b;
+    text-align:center;
+}
+
+@keyframes runAcross{
+    0%{
+        right:-400px;
+    }
+    100%{
+        right:110%;
+    }
+}
+
+</style>
+
+<div class="thinking-wrapper">
+
+    <div class="runner-area">
+
+        <div class="runner">
+
+            <div class="runner-char">
+                🧑‍🎓
+            </div>
+
+            <div class="thought-cloud">
+                💭 Thinking...
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="thinking-facts" id="fact-box">
+        🏛️ TIET celebrates 70 years of excellence
+    </div>
+
+</div>
+
+<script>
+
+const facts = [
+"🏛️ TIET celebrates 70 years of excellence",
+"🚀 Strong placement culture at Thapar",
+"🌍 International exchange opportunities available",
+"📚 One of India's top engineering institutes",
+"💡 Innovation drives the TIET ecosystem",
+"🤖 Scout AI is exploring campus knowledge"
+];
+
+let factIndex = 0;
+
+setInterval(() => {
+
+    factIndex = (factIndex + 1) % facts.length;
+
+    document.getElementById("fact-box").innerText =
+    facts[factIndex];
+
+}, 2000);
+
+</script>
+""", height=220)
+
+        result = st.session_state.agent.invoke(
+            user_input,
+            config={
+                "configurable":{
+                    "thread_id":
+                    st.session_state.thread_id
+                }
+            },
+        )
+
+        thinking_placeholder.empty()
+
+        tool_calls_log = []
+        final_content = ""
+
+        for msg in result["messages"]:
+
+            if msg.type == "ai":
+
+                if msg.content:
+                    final_content = msg.content
+
+        display_text, options = parse_options(
+            final_content
+        )
+
+        st.markdown(display_text)
+
     st.session_state.messages.append({
-        "role": "assistant",
-        "content": full_content,
-        "display_text": display_text,
-        "options": options,
-        "tool_calls": tool_calls_log,
+        "role":"assistant",
+        "content":final_content,
+        "display_text":display_text,
+        "options":[]
     })
