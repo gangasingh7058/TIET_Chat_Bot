@@ -34,34 +34,18 @@ st.markdown("""
 footer {visibility:hidden;}
 header {visibility:hidden;}
 
-/* Chat styling */
+/* Chat */
 
 .stChatMessage{
     border-radius:18px !important;
     padding:12px 16px !important;
     margin-bottom:10px !important;
-    animation:fadeIn 0.3s ease;
 }
-
-@keyframes fadeIn{
-    from{
-        opacity:0;
-        transform:translateY(10px);
-    }
-    to{
-        opacity:1;
-        transform:translateY(0px);
-    }
-}
-
-/* User */
 
 [data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-user"]){
     background:#fee2e2 !important;
     border-left:4px solid #991b1b !important;
 }
-
-/* Assistant */
 
 [data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-assistant"]){
     background:#fff7ed !important;
@@ -106,15 +90,6 @@ section[data-testid="stSidebar"] *{
     font-size:12px;
 }
 
-/* Tool activity */
-
-.tool-activity{
-    background:#fee2e2;
-    border-radius:12px;
-    padding:10px;
-    margin-bottom:8px;
-}
-
 /* Welcome */
 
 .welcome-box{
@@ -128,96 +103,6 @@ section[data-testid="stSidebar"] *{
 
 .welcome-box h1{
     color:#991b1b;
-}
-
-/* Thinking Animation */
-
-.thinking-wrapper{
-    width:100%;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    justify-content:center;
-    margin-top:10px;
-    margin-bottom:10px;
-}
-
-.runner-area{
-    width:100%;
-    height:140px;
-    position:relative;
-    overflow:hidden;
-}
-
-.runner{
-    position:absolute;
-    top:20px;
-    right:-350px;
-    animation:runAcross 7s linear infinite;
-    display:flex;
-    align-items:center;
-    gap:16px;
-}
-
-.runner-char{
-    font-size:82px;
-}
-
-.thought-cloud{
-    position:relative;
-    background:white;
-    color:#991b1b;
-    padding:14px 22px;
-    border-radius:30px;
-    font-size:15px;
-    font-weight:700;
-    white-space:nowrap;
-    box-shadow:0 10px 30px rgba(0,0,0,0.12);
-}
-
-.thought-cloud::before{
-    content:'';
-    position:absolute;
-    width:16px;
-    height:16px;
-    background:white;
-    border-radius:50%;
-    left:-10px;
-    bottom:10px;
-}
-
-.thought-cloud::after{
-    content:'';
-    position:absolute;
-    width:10px;
-    height:10px;
-    background:white;
-    border-radius:50%;
-    left:-18px;
-    bottom:2px;
-}
-
-.thinking-facts{
-    margin-top:10px;
-    font-size:18px;
-    font-weight:700;
-    color:#991b1b;
-    animation:pulseText 2s infinite;
-}
-
-@keyframes runAcross{
-    0%{
-        right:-350px;
-    }
-    100%{
-        right:110%;
-    }
-}
-
-@keyframes pulseText{
-    0%{opacity:0.3;}
-    50%{opacity:1;}
-    100%{opacity:0.3;}
 }
 
 </style>
@@ -368,144 +253,132 @@ if user_input:
 
     with st.chat_message("assistant", avatar="🎓"):
 
+        # Placeholder for animation
         thinking_placeholder = st.empty()
 
-        components.html("""
-<style>
+        # Animated loader
+        with thinking_placeholder.container():
 
-.thinking-wrapper{
-    width:100%;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    justify-content:center;
-    margin-top:10px;
-    margin-bottom:10px;
-}
+            components.html("""
+            <style>
 
-.runner-area{
-    width:100%;
-    height:150px;
-    position:relative;
-    overflow:hidden;
-}
+            .thinking-wrapper{
+                width:100%;
+                display:flex;
+                flex-direction:column;
+                align-items:center;
+                justify-content:center;
+                margin-top:10px;
+                margin-bottom:10px;
+            }
 
-.runner{
-    position:absolute;
-    top:25px;
-    right:-350px;
-    animation:runAcross 7s linear infinite;
-    display:flex;
-    align-items:center;
-    gap:18px;
-}
+            .runner-area{
+                width:100%;
+                height:150px;
+                position:relative;
+                overflow:hidden;
+            }
 
-.runner-char{
-    font-size:90px;
-}
+            .runner{
+                position:absolute;
+                top:25px;
+                right:-350px;
+                animation:runAcross 7s linear infinite;
+                display:flex;
+                align-items:center;
+                gap:18px;
+            }
 
-.thought-cloud{
-    position:relative;
-    background:white;
-    color:#991b1b;
-    padding:14px 24px;
-    border-radius:30px;
-    font-size:16px;
-    font-weight:700;
-    white-space:nowrap;
-    box-shadow:0 10px 25px rgba(0,0,0,0.15);
-}
+            .runner-char{
+                font-size:90px;
+            }
 
-.thought-cloud::before{
-    content:'';
-    position:absolute;
-    width:16px;
-    height:16px;
-    background:white;
-    border-radius:50%;
-    left:-10px;
-    bottom:10px;
-}
+            .thought-cloud{
+                position:relative;
+                background:white;
+                color:#991b1b;
+                padding:14px 24px;
+                border-radius:30px;
+                font-size:16px;
+                font-weight:700;
+                white-space:nowrap;
+                box-shadow:0 10px 25px rgba(0,0,0,0.15);
+            }
 
-.thought-cloud::after{
-    content:'';
-    position:absolute;
-    width:10px;
-    height:10px;
-    background:white;
-    border-radius:50%;
-    left:-18px;
-    bottom:2px;
-}
+            .thinking-facts{
+                margin-top:10px;
+                font-size:18px;
+                font-weight:700;
+                color:#991b1b;
+                text-align:center;
+            }
 
-.thinking-facts{
-    margin-top:10px;
-    font-size:18px;
-    font-weight:700;
-    color:#991b1b;
-    text-align:center;
-}
+            @keyframes runAcross{
+                0%{
+                    right:-400px;
+                }
+                100%{
+                    right:110%;
+                }
+            }
 
-@keyframes runAcross{
-    0%{
-        right:-400px;
-    }
-    100%{
-        right:110%;
-    }
-}
+            </style>
 
-</style>
+            <div class="thinking-wrapper">
 
-<div class="thinking-wrapper">
+                <div class="runner-area">
 
-    <div class="runner-area">
+                    <div class="runner">
 
-        <div class="runner">
+                        <div class="runner-char">
+                            🧑‍🎓
+                        </div>
 
-            <div class="runner-char">
-                🧑‍🎓
+                        <div class="thought-cloud">
+                            💭 Thinking...
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="thinking-facts" id="fact-box">
+                    🏛️ TIET celebrates 70 years of excellence
+                </div>
+
             </div>
 
-            <div class="thought-cloud">
-                💭 Thinking...
-            </div>
+            <script>
 
-        </div>
+            const facts = [
+                "🏛️ TIET celebrates 70 years of excellence",
+                "🚀 Strong placement culture at Thapar",
+                "🌍 International exchange opportunities available",
+                "📚 One of India's top engineering institutes",
+                "💡 Innovation drives the TIET ecosystem",
+                "🤖 Scout AI is exploring campus knowledge"
+            ];
 
-    </div>
+            let factIndex = 0;
 
-    <div class="thinking-facts" id="fact-box">
-        🏛️ TIET celebrates 70 years of excellence
-    </div>
+            setInterval(() => {
 
-</div>
+                factIndex = (factIndex + 1) % facts.length;
 
-<script>
+                const factBox =
+                document.getElementById("fact-box");
 
-const facts = [
-"🏛️ TIET celebrates 70 years of excellence",
-"🚀 Strong placement culture at Thapar",
-"🌍 International exchange opportunities available",
-"📚 One of India's top engineering institutes",
-"💡 Innovation drives the TIET ecosystem",
-"🤖 Scout AI is exploring campus knowledge"
-];
+                if(factBox){
+                    factBox.innerText =
+                    facts[factIndex];
+                }
 
-let factIndex = 0;
+            }, 2000);
 
-setInterval(() => {
+            </script>
+            """, height=230)
 
-    factIndex = (factIndex + 1) % facts.length;
-
-    document.getElementById("fact-box").innerText =
-    facts[factIndex];
-
-}, 2000);
-
-</script>
-""", height=220)
-
+        # Invoke agent
         result = st.session_state.agent.invoke(
             user_input,
             config={
@@ -516,9 +389,9 @@ setInterval(() => {
             },
         )
 
+        # REMOVE LOADER AFTER ANSWER
         thinking_placeholder.empty()
 
-        tool_calls_log = []
         final_content = ""
 
         for msg in result["messages"]:
@@ -534,6 +407,7 @@ setInterval(() => {
 
         st.markdown(display_text)
 
+    # Save history
     st.session_state.messages.append({
         "role":"assistant",
         "content":final_content,
