@@ -44,6 +44,7 @@ class Agent():
             openai_api_key=os.getenv("OPENROUTER_API_KEY"),
             openai_api_base="https://openrouter.ai/api/v1",
             temperature=self.temperature,
+            streaming=True,
         ).bind_tools(self.tools)
 
         self.runnable = self.build_graph()
@@ -76,6 +77,50 @@ class Agent():
         return self.runnable.invoke(
             {"messages": [HumanMessage(content=query)]}, **kwargs
         )
+
+    def stream(self, query: str, **kwargs):
+        """
+        Stream the agent response token-by-token.
+
+        Yields:
+            dict: Either {"type": "token", "content": str} for text chunks,
+                  or {"type": "tool_call", "name": str, "args": str} for tool usage,
+                  or {"type": "done", "full_content": str} when finished.
+        """
+        from langchain_core.messages import AIMessageChunk, ToolMessage
+
+        tool_calls_log = []
+        final_content = ""
+
+        for chunk, metadata in self.runnable.stream(
+            {"messages": [HumanMessage(content=query)]},
+            stream_mode="messages",
+            **kwargs,
+        ):
+            # Collect tool call info and stream text from AI chunks
+            if isinstance(chunk, AIMessageChunk):
+                if hasattr(chunk, "tool_call_chunks") and chunk.tool_call_chunks:
+                    for tc in chunk.tool_call_chunks:
+                        # Only log when we get the tool name (first chunk of a tool call)
+                        if tc.get("name"):
+                            tool_calls_log.append({
+                                "name": tc["name"],
+                                "args": tc.get("args", ""),
+                            })
+                # Stream text content tokens (skip chunks that are tool calls)
+                elif chunk.content:
+                    final_content += chunk.content
+                    yield {"type": "token", "content": chunk.content}
+
+            # Report tool results as they happen
+            elif isinstance(chunk, ToolMessage):
+                # Tool result came back — find the matching tool call and update args
+                for tc in tool_calls_log:
+                    if tc["name"] == chunk.name and tc["args"] == "":
+                        tc["args"] = str(chunk.content)[:100]
+                yield {"type": "tool_call", "name": chunk.name, "args": str(chunk.content)[:100]}
+
+        yield {"type": "done", "full_content": final_content, "tool_calls": tool_calls_log}
 
     def inspect_graph(self):
         """

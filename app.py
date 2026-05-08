@@ -381,63 +381,63 @@ if user_input:
     with st.chat_message("user", avatar="👤"):
         st.markdown(user_input)
 
-    # Get agent response
+    # Get agent response (streamed)
     with st.chat_message("assistant", avatar="🎓"):
-        with st.spinner("Thinking..."):
-            result = st.session_state.agent.invoke(
-                user_input,
-                config={"configurable": {"thread_id": st.session_state.thread_id}},
-            )
+        tool_calls_log = []
+        full_content = ""
+        tool_expander = None
+        text_placeholder = st.empty()
 
-            # Extract tool calls and final response
-            tool_calls_log = []
-            final_content = ""
+        for event in st.session_state.agent.stream(
+            user_input,
+            config={"configurable": {"thread_id": st.session_state.thread_id}},
+        ):
+            if event["type"] == "tool_call":
+                # Show/update tool activity expander
+                if tool_expander is None:
+                    tool_expander = st.expander("🔧 Tool activity", expanded=True)
+                with tool_expander:
+                    st.markdown(
+                        f'<div class="tool-activity">'
+                        f'Called <span class="tool-name">{event["name"]}</span>'
+                        f'</div>',
+                        unsafe_allow_html=True,
+                    )
 
-            for msg in result["messages"]:
-                if msg.type == "ai":
-                    if hasattr(msg, "tool_calls") and msg.tool_calls:
-                        for tc in msg.tool_calls:
-                            tool_calls_log.append({
-                                "name": tc["name"],
-                                "args": tc["args"].get("query", str(tc["args"])),
-                            })
-                    if msg.content:
-                        final_content = msg.content
+            elif event["type"] == "token":
+                full_content += event["content"]
+                text_placeholder.markdown(full_content + "▌")
 
-            # Show tool activity
-            if tool_calls_log:
-                with st.expander("🔧 Tool activity", expanded=False):
-                    for tc in tool_calls_log:
-                        st.markdown(
-                            f'<div class="tool-activity">'
-                            f'Called <span class="tool-name">{tc["name"]}</span>'
-                            f'(<code>{tc["args"]}</code>)'
-                            f'</div>',
-                            unsafe_allow_html=True,
-                        )
+            elif event["type"] == "done":
+                full_content = event["full_content"]
+                tool_calls_log = event.get("tool_calls", [])
 
-            # Parse options from agent response
-            display_text, options = parse_options(final_content)
+        # Collapse tool expander after done
+        if tool_expander is not None:
+            tool_expander.expanded = False
 
-            # Show the text part
-            st.markdown(display_text)
+        # Parse options from the final response
+        display_text, options = parse_options(full_content)
 
-            # Show option pills as buttons
-            if options:
-                cols = st.columns(min(len(options), 3))
-                for i, opt in enumerate(options):
-                    col = cols[i % min(len(options), 3)]
-                    if col.button(
-                        f"👉 {opt}",
-                        key=f"new_opt_{i}",
-                        use_container_width=True,
-                    ):
-                        st.session_state.pending_question = opt
+        # Render final text (remove cursor)
+        text_placeholder.markdown(display_text)
 
-    # Save to history (store both raw content and parsed display)
+        # Show option pills as buttons
+        if options:
+            cols = st.columns(min(len(options), 3))
+            for i, opt in enumerate(options):
+                col = cols[i % min(len(options), 3)]
+                if col.button(
+                    f"👉 {opt}",
+                    key=f"new_opt_{i}",
+                    use_container_width=True,
+                ):
+                    st.session_state.pending_question = opt
+
+    # Save to history
     st.session_state.messages.append({
         "role": "assistant",
-        "content": final_content,
+        "content": full_content,
         "display_text": display_text,
         "options": options,
         "tool_calls": tool_calls_log,
