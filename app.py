@@ -1,7 +1,10 @@
 import streamlit as st
+import streamlit.components.v1 as components
 from Agent.graph import Agent
 import uuid
 import re
+import json
+from pathlib import Path
 
 # ──────────────────────────────────────────────────
 #  Page config
@@ -63,9 +66,26 @@ st.markdown("""
 }
 
 /* ── Hide default Streamlit branding ── */
-#MainMenu { visibility: hidden; }
-footer { visibility: hidden; }
-header { visibility: hidden; }
+#MainMenu { display: none !important; }
+footer { display: none !important; }
+
+/* Hide header background but keep sidebar toggle visible */
+header[data-testid="stHeader"] {
+    background: transparent !important;
+    height: 0 !important;
+    overflow: visible !important;
+}
+
+/* Ensure sidebar toggle button is always clickable */
+[data-testid="collapsedControl"],
+[data-testid="stSidebarCollapsedControl"],
+button[kind="headerNoPadding"] {
+    visibility: visible !important;
+    z-index: 999 !important;
+    position: fixed !important;
+    top: 8px !important;
+    left: 8px !important;
+}
 
 /* ── Chat message styling ── */
 .stChatMessage {
@@ -250,6 +270,11 @@ def parse_options(text: str):
     return clean_text, options
 
 
+def _set_pending(question: str):
+    """Callback for option/quick-question buttons — sets the pending question."""
+    st.session_state.pending_question = question
+
+
 # ──────────────────────────────────────────────────
 #  Session state initialisation
 # ──────────────────────────────────────────────────
@@ -297,8 +322,13 @@ with st.sidebar:
         "What are the hostel charges?",
     ]
     for q in quick_questions:
-        if st.button(q, key=f"qq_{q}", use_container_width=True):
-            st.session_state.pending_question = q
+        st.button(
+            q,
+            key=f"qq_{q}",
+            use_container_width=True,
+            on_click=_set_pending,
+            args=(q,),
+        )
 
     st.markdown('<div class="glow-divider"></div>', unsafe_allow_html=True)
 
@@ -358,12 +388,13 @@ for idx, msg in enumerate(st.session_state.messages):
             cols = st.columns(min(len(options), 3))
             for i, opt in enumerate(options):
                 col = cols[i % min(len(options), 3)]
-                if col.button(
+                col.button(
                     f"👉 {opt}",
                     key=f"opt_{idx}_{i}",
                     use_container_width=True,
-                ):
-                    st.session_state.pending_question = opt
+                    on_click=_set_pending,
+                    args=(opt,),
+                )
 
 # ──────────────────────────────────────────────────
 #  Handle input (typed or sidebar quick-question)
@@ -387,6 +418,194 @@ if user_input:
         full_content = ""
         tool_expander = None
         text_placeholder = st.empty()
+        thinking_cleared = False
+
+        # Load facts from JSON
+        facts_path = Path(__file__).parent / "thaparfacts.json"
+        with open(facts_path, "r", encoding="utf-8") as f:
+            thapar_facts = json.load(f)
+        facts_json = json.dumps(thapar_facts)
+        first_emoji = thapar_facts[0]["emoji"] if thapar_facts else "🎓"
+        first_text = thapar_facts[0]["text"] if thapar_facts else "Loading..."
+
+        # Show thinking animation with Lottie avatar + Thapar facts
+        thinking_html = """
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
+            <style>
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+
+            .thinking-container {
+                font-family: 'Inter', sans-serif;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                padding: 16px 16px 12px;
+            }
+
+            /* Lottie avatar wrapper */
+            .avatar-wrapper {
+                width: 120px;
+                height: 120px;
+                border-radius: 50%;
+                background: linear-gradient(135deg, rgba(59,130,246,0.12), rgba(139,92,246,0.12));
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin-bottom: 10px;
+                position: relative;
+                animation: pulse-ring 2.5s ease-in-out infinite;
+            }
+
+            .avatar-wrapper::before {
+                content: '';
+                position: absolute;
+                width: 140px;
+                height: 140px;
+                border-radius: 50%;
+                border: 2px solid rgba(59,130,246,0.15);
+                animation: ping 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+            }
+
+            #lottie-avatar {
+                width: 90px;
+                height: 90px;
+            }
+
+            @keyframes pulse-ring {
+                0%, 100% { box-shadow: 0 0 0 0 rgba(59,130,246,0.15); }
+                50% { box-shadow: 0 0 0 12px rgba(139,92,246,0.05); }
+            }
+
+            @keyframes ping {
+                0% { transform: scale(1); opacity: 0.6; }
+                75%, 100% { transform: scale(1.15); opacity: 0; }
+            }
+
+            /* Status label */
+            .thinking-label {
+                font-size: 13px;
+                font-weight: 600;
+                color: #60a5fa;
+                margin-bottom: 12px;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+
+            .thinking-label .dot-pulse {
+                display: flex;
+                gap: 4px;
+            }
+
+            .thinking-label .dot-pulse span {
+                width: 5px;
+                height: 5px;
+                border-radius: 50%;
+                background: #8b5cf6;
+                animation: dotPulse 1.4s ease-in-out infinite;
+            }
+            .thinking-label .dot-pulse span:nth-child(2) { animation-delay: 0.2s; }
+            .thinking-label .dot-pulse span:nth-child(3) { animation-delay: 0.4s; }
+
+            @keyframes dotPulse {
+                0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); }
+                40% { opacity: 1; transform: scale(1.3); }
+            }
+
+            /* Fact card */
+            .fact-card {
+                background: linear-gradient(135deg, rgba(59,130,246,0.06), rgba(139,92,246,0.06));
+                border: 1px solid rgba(99,102,241,0.15);
+                border-radius: 16px;
+                padding: 12px 20px;
+                text-align: center;
+                max-width: 400px;
+                width: 100%;
+                animation: fadeSwap 0.5s ease;
+            }
+
+            .fact-emoji {
+                font-size: 22px;
+                margin-bottom: 4px;
+            }
+
+            .fact-text {
+                font-size: 13px;
+                font-weight: 500;
+                color: #94a3b8;
+                line-height: 1.5;
+            }
+
+            .fact-label {
+                font-size: 10px;
+                text-transform: uppercase;
+                letter-spacing: 1.5px;
+                color: #475569;
+                margin-bottom: 8px;
+                font-weight: 600;
+            }
+
+            @keyframes fadeSwap {
+                from { opacity: 0; transform: translateY(6px); }
+                to   { opacity: 1; transform: translateY(0); }
+            }
+            </style>
+
+            <div class="thinking-container">
+                <div class="avatar-wrapper">
+                    <div id="lottie-avatar"></div>
+                </div>
+
+                <div class="thinking-label">
+                    Scout is thinking
+                    <div class="dot-pulse">
+                        <span></span><span></span><span></span>
+                    </div>
+                </div>
+
+                <div class="fact-label">✨ Did you know?</div>
+                <div class="fact-card" id="fact-card">
+                    <div class="fact-emoji" id="fact-emoji">FIRST_EMOJI</div>
+                    <div class="fact-text" id="fact-text">FIRST_TEXT</div>
+                </div>
+            </div>
+
+            <script>
+            // Load Lottie animation
+            lottie.loadAnimation({
+                container: document.getElementById('lottie-avatar'),
+                renderer: 'svg',
+                loop: true,
+                autoplay: true,
+                path: 'https://assets9.lottiefiles.com/packages/lf20_zrqthn6o.json'
+            });
+
+            // Rotate facts
+            const facts = FACTS_PLACEHOLDER;
+            let idx = 0;
+            setInterval(() => {
+                idx = (idx + 1) % facts.length;
+                const card = document.getElementById("fact-card");
+                const emoji = document.getElementById("fact-emoji");
+                const text = document.getElementById("fact-text");
+                if (card && emoji && text) {
+                    card.style.animation = "none";
+                    void card.offsetHeight;
+                    card.style.animation = "fadeSwap 0.5s ease";
+                    emoji.innerText = facts[idx].emoji;
+                    text.innerText = facts[idx].text;
+                }
+            }, 3000);
+            </script>
+        """
+        thinking_html = thinking_html.replace("FACTS_PLACEHOLDER", facts_json)
+        thinking_html = thinking_html.replace("FIRST_EMOJI", first_emoji)
+        thinking_html = thinking_html.replace("FIRST_TEXT", first_text)
+
+        with text_placeholder.container():
+            components.html(thinking_html, height=320)
 
         for event in st.session_state.agent.stream(
             user_input,
@@ -405,6 +624,9 @@ if user_input:
                     )
 
             elif event["type"] == "token":
+                if not thinking_cleared:
+                    text_placeholder.empty()
+                    thinking_cleared = True
                 full_content += event["content"]
                 text_placeholder.markdown(full_content + "▌")
 
@@ -427,12 +649,13 @@ if user_input:
             cols = st.columns(min(len(options), 3))
             for i, opt in enumerate(options):
                 col = cols[i % min(len(options), 3)]
-                if col.button(
+                col.button(
                     f"👉 {opt}",
                     key=f"new_opt_{i}",
                     use_container_width=True,
-                ):
-                    st.session_state.pending_question = opt
+                    on_click=_set_pending,
+                    args=(opt,),
+                )
 
     # Save to history
     st.session_state.messages.append({
