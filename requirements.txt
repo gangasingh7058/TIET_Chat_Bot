@@ -4,8 +4,9 @@
 langgraph
 langchain-core
 langchain-huggingface
+langchain-openai
 
-# LLM / HuggingFace
+# LLM / OpenRouter & HuggingFace
 huggingface-hub
 
 # PageIndex local dependencies (replaces cloud `pageindex` package)
@@ -27,4 +28,9 @@ streamlit
 fastapi
 uvicorn[standard]
 python-multipart
-langchain-openai
+
+litellm>=1.83.0
+pymupdf>=1.26.0
+PyPDF2>=3.0.1
+python-dotenv>=1.0.1
+pyyaml>=6.0.2
