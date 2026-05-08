@@ -1,7 +1,17 @@
 import os
-import sys
 from dotenv import load_dotenv
 load_dotenv(override=True)
+
+def get_secret(key: str) -> str:
+    """Get a secret from env vars (local) or st.secrets (Streamlit Cloud)."""
+    val = os.getenv(key)
+    if val:
+        return val
+    try:
+        import streamlit as st
+        return st.secrets.get(key, "")
+    except Exception:
+        return ""
 from pydantic import BaseModel
 from typing import List, Annotated
 from langgraph.graph import StateGraph, END, START
@@ -30,7 +40,7 @@ class Agent():
     def __init__(
         self,
         name: str,
-        model: str = "Qwen/Qwen2.5-72B-Instruct",
+        model: str = "openai/gpt-4o-mini",
         system_prompt: str = college_assistant_system_prompt,
         temperature: float = 0.5,
     ):
@@ -40,14 +50,14 @@ class Agent():
         self.system_prompt = system_prompt
         self.temperature = temperature
 
-        endpoint = HuggingFaceEndpoint(
-            repo_id=self.model,
-            task="text-generation",
-            huggingfacehub_api_token=os.getenv("HUGGING_FACE_API_TOKEN"),
+        self.llm = ChatOpenAI(
+            model=self.model,
+            openai_api_key=get_secret("OPENROUTER_API_KEY"),
+            openai_api_base="https://openrouter.ai/api/v1",
             temperature=self.temperature,
-        )
+            streaming=True,
+        ).bind_tools(self.tools)
 
-        self.llm = ChatHuggingFace(llm=endpoint).bind_tools(self.tools)
         self.runnable = self.build_graph()
 
     def build_graph(self):
